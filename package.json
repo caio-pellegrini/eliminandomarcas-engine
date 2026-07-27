@@ -1,0 +1,34 @@
+{
+  "name": "eliminandomarcas-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Motor headless de temporadas do perfil eliminandomarcas",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "run:now": "node src/index.js --run-now",
+    "render:sample": "node src/render/renderVideo.js",
+    "studio": "remotion studio src/render/remotion/index.jsx",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch"
+  },
+  "engines": {
+    "node": ">=24.18.0 <25"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.500",
+    "@remotion/cli": "4.0.500",
+    "@remotion/renderer": "4.0.500",
+    "dotenv": "^17.2.3",
+    "node-cron": "^4.2.1",
+    "pino": "^9.14.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.500"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.10"
+  }
+}

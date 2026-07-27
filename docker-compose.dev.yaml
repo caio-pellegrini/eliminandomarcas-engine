@@ -1,0 +1,19 @@
+name: eliminandomarcas-engine
+
+services:
+  eliminandomarcas-engine:
+    build:
+      context: .
+      target: development
+    init: true
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+    command: npm run dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./assets/audio:/app/assets/audio
