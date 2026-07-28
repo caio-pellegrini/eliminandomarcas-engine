@@ -50,7 +50,9 @@ docker compose -f docker-compose.prod.yaml up -d
 docker compose -f docker-compose.prod.yaml logs -f eliminandomarcas-engine
 ```
 
-O Compose de produção usa `restart: always`, não monta o código e mantém somente `data/`, `output/` e as trilhas como bind mounts. Faça backup periódico de `data/` e `output/`.
+O Compose de produção usa `restart: always`, não monta o código e mantém o estado de `data/` e os vídeos de `output/` em volumes nomeados do Docker. As trilhas são incluídas na imagem durante o build. Faça backup periódico dos volumes `season-data` e `rendered-videos`; no Dokploy, eles podem ser configurados na aba **Volume Backups**.
+
+Na primeira criação, o Docker inicializa `season-data` com a temporada incluída na imagem. Não remova os volumes ao fazer redeploy, pois eles guardam o avanço da temporada e os vídeos renderizados.
 
 Para testar uma execução imediata em produção:
 

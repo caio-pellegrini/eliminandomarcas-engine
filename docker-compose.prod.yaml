@@ -13,6 +13,9 @@ services:
       NODE_ENV: production
     command: node src/index.js
     volumes:
-      - ./data:/app/data
-      - ./output:/app/output
-      - ./assets/audio:/app/assets/audio:ro
+      - season-data:/app/data
+      - rendered-videos:/app/output
+
+volumes:
+  season-data:
+  rendered-videos:
