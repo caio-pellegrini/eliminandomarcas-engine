@@ -9,7 +9,7 @@ export const Opening = ({day, totalDays, niche, durationSeconds}) => {
   const {rouletteEndFrame} = getVideoTiming(durationSeconds, fps);
   const opacity = interpolate(frame, [rouletteEndFrame - 10, rouletteEndFrame], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return (
-    <AbsoluteFill style={{...base, alignItems: 'center', opacity, textAlign: 'center', padding: '145px 70px', pointerEvents: 'none'}}>
+    <AbsoluteFill style={{...base, alignItems: 'center', opacity, textAlign: 'center', padding: '210px 70px', pointerEvents: 'none'}}>
       <div
         style={{
           width: '100%',
