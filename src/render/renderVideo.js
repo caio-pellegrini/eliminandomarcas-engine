@@ -55,7 +55,7 @@ async function renderVideo({state, day, brand, config, logger}) {
       wheelSoundPath: config.wheelSpinSoundPath,
       ffmpegPath: config.ffmpegPath,
     });
-    logger.info({day, outputPath, audioSource: result.audioSource}, 'Trilha adicionada ao vídeo');
+    logger.info({day, outputPath, audioSource: result.audioSource, wheelAudioSource: result.wheelAudioSource}, 'Áudio adicionado ao vídeo');
     return result;
   } finally {
     await fs.rm(visualPath, {force: true});

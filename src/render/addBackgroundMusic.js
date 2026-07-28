@@ -3,11 +3,6 @@ const path = require('node:path');
 const {spawn} = require('node:child_process');
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac']);
-const SYNTHETIC_CHORDS = [
-  '0.045*(sin(2*PI*220*t)+sin(2*PI*277.18*t)+sin(2*PI*329.63*t))',
-  '0.045*(sin(2*PI*196*t)+sin(2*PI*246.94*t)+sin(2*PI*293.66*t))',
-  '0.045*(sin(2*PI*261.63*t)+sin(2*PI*329.63*t)+sin(2*PI*392*t))',
-];
 
 async function findAudioTracks(audioDir, excludedPaths = []) {
   try {
@@ -48,19 +43,37 @@ async function addBackgroundMusic({visualPath, outputPath, audioDir, day, durati
   const selectedTrack = tracks.length ? tracks[(day - 1) % tracks.length] : null;
   const hasWheelSound = await isFile(wheelSoundPath);
   const fadeOutStart = Math.max(0, durationSeconds - 0.7);
-  const inputs = selectedTrack
-    ? ['-i', visualPath, '-stream_loop', '-1', '-i', selectedTrack]
-    : ['-i', visualPath, '-f', 'lavfi', '-i', `aevalsrc=${SYNTHETIC_CHORDS[(day - 1) % SYNTHETIC_CHORDS.length]}:s=44100:d=${durationSeconds}`];
-  const audioOutput = hasWheelSound
-    ? [
-      '-filter_complex',
-      `[1:a]volume=0.22,afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=0.7[music];` +
-      `[2:a]atrim=duration=${rouletteDurationSeconds},asetpts=PTS-STARTPTS,volume=0.7,afade=t=out:st=${Math.max(0, rouletteDurationSeconds - 0.7)}:d=0.7[wheel];` +
-      '[music][wheel]amix=inputs=2:duration=longest:normalize=0[mixed]',
-      '-map', '[mixed]',
-    ]
-    : ['-map', '1:a:0', '-af', `volume=0.22,afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=0.7`];
-  if (hasWheelSound) inputs.push('-stream_loop', '-1', '-i', wheelSoundPath);
+  const inputs = ['-i', visualPath];
+  const filters = [];
+  let musicInputIndex;
+  let wheelInputIndex;
+
+  if (selectedTrack) {
+    musicInputIndex = inputs.filter((argument) => argument === '-i').length;
+    inputs.push('-stream_loop', '-1', '-i', selectedTrack);
+    filters.push(`[${musicInputIndex}:a]volume=0.22,afade=t=in:st=0:d=0.5,afade=t=out:st=${fadeOutStart}:d=0.7[music]`);
+  }
+  if (hasWheelSound) {
+    wheelInputIndex = inputs.filter((argument) => argument === '-i').length;
+    inputs.push('-stream_loop', '-1', '-i', wheelSoundPath);
+    filters.push(
+      `[${wheelInputIndex}:a]atrim=duration=${rouletteDurationSeconds},asetpts=PTS-STARTPTS,` +
+      `volume=0.7,afade=t=out:st=${Math.max(0, rouletteDurationSeconds - 0.7)}:d=0.7,` +
+      `apad=whole_dur=${durationSeconds}[wheel]`,
+    );
+  }
+
+  let audioOutput;
+  if (selectedTrack && hasWheelSound) {
+    filters.push('[music][wheel]amix=inputs=2:duration=longest:normalize=0[mixed]');
+    audioOutput = ['-filter_complex', filters.join(';'), '-map', '[mixed]'];
+  } else if (selectedTrack) {
+    audioOutput = ['-filter_complex', filters.join(';'), '-map', '[music]'];
+  } else if (hasWheelSound) {
+    audioOutput = ['-filter_complex', filters.join(';'), '-map', '[wheel]'];
+  } else {
+    audioOutput = ['-an'];
+  }
   const args = [
     ...inputs, '-map', '0:v:0', ...audioOutput, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
     '-t', String(durationSeconds), '-movflags', '+faststart', '-y', outputPath,
@@ -68,7 +81,7 @@ async function addBackgroundMusic({visualPath, outputPath, audioDir, day, durati
   await runFfmpeg(ffmpegPath, args);
   return {
     outputPath,
-    audioSource: selectedTrack || `synthetic-${((day - 1) % SYNTHETIC_CHORDS.length) + 1}`,
+    audioSource: selectedTrack,
     wheelAudioSource: hasWheelSound ? wheelSoundPath : null,
   };
 }
