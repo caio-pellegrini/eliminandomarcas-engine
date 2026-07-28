@@ -41,20 +41,27 @@ export const Roulette = ({brands, eliminatedBrand, durationSeconds}) => {
   });
   const eliminatedColor = interpolateColors(highlightProgress, [0, 1], [palette.text, palette.secondary]);
 
-  // A divider crossing the fixed pointer produces a short flex. Rotation speed
-  // controls the strength, so the ticks become gentler during the final slowdown.
+  // The pointer loads up as a divider approaches, snaps past it and rebounds.
+  // Keeping some strength at low speed makes the final ticks remain perceptible.
   const tickPhase = positiveModulo(rotation + segmentAngle / 2, segmentAngle) / segmentAngle;
-  const tickShape = interpolate(tickPhase, [0, 0.14, 0.3, 0.65, 1], [-13, 4, -2, 0, 9]);
+  const tickShape = interpolate(
+    tickPhase,
+    [0, 0.08, 0.18, 0.32, 0.52, 0.7, 1],
+    [15, -7, 4, -2, 0, 0, -18],
+  );
   const degreesPerFrame = Math.abs(rotation - previousRotation);
-  const tickStrength = interpolate(degreesPerFrame, [0, segmentAngle * 0.12, segmentAngle], [0.25, 0.7, 1], {
+  const tickStrength = interpolate(degreesPerFrame, [0, segmentAngle * 0.08, segmentAngle * 0.6, segmentAngle * 1.4], [0.5, 0.72, 1, 1.1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
   const pointerDeflection = frame < rouletteStopFrame ? tickShape * tickStrength : 0;
+  const contactLoad = tickPhase >= 0.7
+    ? interpolate(tickPhase, [0.7, 1], [0, 1])
+    : interpolate(tickPhase, [0, 0.14], [0.65, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const pointerCompression = frame < rouletteStopFrame ? contactLoad * tickStrength : 0;
 
   return (
     <AbsoluteFill style={{...base, alignItems: 'center', justifyContent: 'center', opacity}}>
-      <div style={{position: 'absolute', top: 305, fontSize: 46, fontWeight: 800}}>A MARCA DE HOJE É...</div>
       <div
         style={{
           position: 'absolute',
@@ -66,7 +73,7 @@ export const Roulette = ({brands, eliminatedBrand, durationSeconds}) => {
           borderRight: '42px solid transparent',
           borderTop: `85px solid ${palette.secondary}`,
           filter: 'drop-shadow(0 8px 8px #0008)',
-          transform: `rotate(${pointerDeflection}deg)`,
+          transform: `rotate(${pointerDeflection}deg) translateY(${-2.5 * pointerCompression}px) scaleY(${1 - 0.035 * pointerCompression})`,
           transformOrigin: '50% 6px',
           willChange: 'transform',
         }}
