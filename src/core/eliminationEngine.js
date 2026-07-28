@@ -36,6 +36,7 @@ function advanceState(state, elimination, details) {
     runDate: details.runDate,
     videoPath: details.videoPath,
     publishStatus: details.publishStatus,
+    caption: details.caption,
     processedAt: details.processedAt,
   };
   return {

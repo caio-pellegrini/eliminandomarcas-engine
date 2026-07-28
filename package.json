@@ -17,9 +17,12 @@
     "node": ">=24.18.0 <25"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.23",
+    "@ai-sdk/openai": "^4.0.22",
     "@remotion/bundler": "4.0.500",
     "@remotion/cli": "4.0.500",
     "@remotion/renderer": "4.0.500",
+    "ai": "^7.0.40",
     "dotenv": "^17.2.3",
     "node-cron": "^4.2.1",
     "pino": "^9.14.0",

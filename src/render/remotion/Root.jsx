@@ -9,7 +9,7 @@ const defaultProps = {
   seasonName: 'Temporada 1: Carros',
   eliminatedBrand: 'Exemplo',
   brands: ['Exemplo', 'Marca A', 'Marca B', 'Marca C', 'Marca D', 'Marca E'],
-  durationSeconds: 7,
+  durationSeconds: 10,
 };
 
 export const RemotionRoot = () => (
@@ -19,8 +19,8 @@ export const RemotionRoot = () => (
     width={1080}
     height={1920}
     fps={30}
-    durationInFrames={210}
+    durationInFrames={300}
     defaultProps={defaultProps}
-    calculateMetadata={({props}) => ({durationInFrames: Math.round((props.durationSeconds || 7) * 30)})}
+    calculateMetadata={({props}) => ({durationInFrames: Math.round((props.durationSeconds || 10) * 30)})}
   />
 );

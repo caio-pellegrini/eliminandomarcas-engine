@@ -28,17 +28,22 @@ function loadConfig(env = process.env) {
     throw new Error(`TIMEZONE inválido: ${timezone}`);
   }
 
-  const videoDurationSeconds = parseInteger(env.VIDEO_DURATION_SECONDS, 7, 'VIDEO_DURATION_SECONDS');
-  if (videoDurationSeconds < 5 || videoDurationSeconds > 8) {
-    throw new Error('VIDEO_DURATION_SECONDS deve ficar entre 5 e 8 segundos.');
+  const videoDurationSeconds = parseInteger(env.VIDEO_DURATION_SECONDS, 10, 'VIDEO_DURATION_SECONDS');
+  if (videoDurationSeconds < 9 || videoDurationSeconds > 10) {
+    throw new Error('VIDEO_DURATION_SECONDS deve ficar entre 9 e 10 segundos.');
   }
+  const aiProvider = (env.AI_PROVIDER || 'openai').toLowerCase();
+  if (!['openai', 'anthropic'].includes(aiProvider)) {
+    throw new Error('AI_PROVIDER deve ser "openai" ou "anthropic".');
+  }
+  const audioDir = path.resolve(env.AUDIO_DIR || path.join(projectRoot, 'assets/audio'));
 
   return Object.freeze({
     projectRoot,
     activeSeason: env.ACTIVE_SEASON || 'season-1-carros.json',
     statePath: path.resolve(env.DATA_DIR || path.join(projectRoot, 'data/seasons'), env.ACTIVE_SEASON || 'season-1-carros.json'),
     outputDir: path.resolve(env.OUTPUT_DIR || path.join(projectRoot, 'output')),
-    audioDir: path.resolve(env.AUDIO_DIR || path.join(projectRoot, 'assets/audio')),
+    audioDir,
     cronSchedule: env.CRON_SCHEDULE || '0 12 * * *',
     timezone,
     publishEnabled: parseBoolean(env.PUBLISH_ENABLED, false),
@@ -46,6 +51,13 @@ function loadConfig(env = process.env) {
     ffmpegPath: env.FFMPEG_PATH || 'ffmpeg',
     renderConcurrency: env.REMOTION_CONCURRENCY || null,
     videoDurationSeconds,
+    wheelSpinSoundPath: path.resolve(env.WHEEL_SPIN_SOUND_PATH || path.join(audioDir, 'wheel-spin.mp3')),
+    aiProvider,
+    aiModel: env.AI_MODEL || (aiProvider === 'openai' ? 'gpt-4o-mini' : 'claude-3-5-haiku-latest'),
+    openaiApiKey: aiProvider === 'openai' ? (env.OPENAI_API_KEY || '') : '',
+    anthropicApiKey: aiProvider === 'anthropic' ? (env.ANTHROPIC_API_KEY || '') : '',
+    aiWebSearchEnabled: parseBoolean(env.AI_WEB_SEARCH_ENABLED, false),
+    aiTimeoutMs: parseInteger(env.AI_TIMEOUT_MS, 15000, 'AI_TIMEOUT_MS'),
     logLevel: env.LOG_LEVEL || 'info',
   });
 }

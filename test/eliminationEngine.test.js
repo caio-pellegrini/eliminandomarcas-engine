@@ -21,10 +21,11 @@ test('retorna e avança a eliminação do dia atual', () => {
   const elimination = getEliminationForDate(state, '2026-07-27');
   expect(elimination).toMatchObject({day: 1, brand: 'A', alreadyProcessed: false});
   const next = advanceState(state, elimination, {
-    runDate: '2026-07-27', videoPath: 'output/dia-01.mp4', publishStatus: 'manual_required', processedAt: '2026-07-27T15:00:00.000Z',
+    runDate: '2026-07-27', videoPath: 'output/dia-01.mp4', publishStatus: 'manual_required', caption: 'Legenda auditável', processedAt: '2026-07-27T15:00:00.000Z',
   });
   expect(next.currentDay).toBe(2);
   expect(next.history).toHaveLength(1);
+  expect(next.history[0].caption).toBe('Legenda auditável');
   expect(state.currentDay).toBe(1);
 });
 

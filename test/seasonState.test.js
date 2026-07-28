@@ -27,6 +27,12 @@ test('rejeita currentDay incoerente com o histórico', () => {
   expect(() => validateState({...validState, currentDay: 2})).toThrow(/próximo dia/);
 });
 
+test('aceita legenda auditável e rejeita legenda vazia no histórico', () => {
+  const entry = {day: 1, brand: 'A', runDate: '2026-07-27', videoPath: 'x.mp4', publishStatus: 'manual_required', caption: 'Legenda', processedAt: '2026-07-27T15:00:00.000Z'};
+  expect(() => validateState({...validState, currentDay: 2, history: [entry]})).not.toThrow();
+  expect(() => validateState({...validState, currentDay: 2, history: [{...entry, caption: ' '}]})).toThrow(/caption/);
+});
+
 test('arquivo inválido produz erro contextual', async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'eliminandomarcas-engine-'));
   const filePath = path.join(directory, 'state.json');

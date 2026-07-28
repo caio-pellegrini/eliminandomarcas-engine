@@ -3,6 +3,7 @@ const path = require('node:path');
 const {bundle} = require('@remotion/bundler');
 const {renderMedia, selectComposition} = require('@remotion/renderer');
 const {addBackgroundMusic} = require('./addBackgroundMusic');
+const {getVideoTiming} = require('./videoTiming');
 
 let bundlePromise;
 
@@ -50,6 +51,8 @@ async function renderVideo({state, day, brand, config, logger}) {
       audioDir: config.audioDir,
       day,
       durationSeconds: config.videoDurationSeconds,
+      rouletteDurationSeconds: getVideoTiming(config.videoDurationSeconds).rouletteEndSeconds,
+      wheelSoundPath: config.wheelSpinSoundPath,
       ffmpegPath: config.ffmpegPath,
     });
     logger.info({day, outputPath, audioSource: result.audioSource}, 'Trilha adicionada ao vídeo');

@@ -3,6 +3,7 @@ const {advanceState, getEliminationForDate, localDateKey} = require('../core/eli
 const {acquireStateLock, readSeasonState, writeSeasonState} = require('../core/seasonState');
 const {renderVideo} = require('../render/renderVideo');
 const {publishToEnabledPlatforms} = require('../publish');
+const {generateCaption} = require('../ai/generateCaption');
 
 async function dailyRun({config, logger, notifier, now = new Date(), services = {}}) {
   const readState = services.readState || readSeasonState;
@@ -10,6 +11,7 @@ async function dailyRun({config, logger, notifier, now = new Date(), services = 
   const lockState = services.lockState || acquireStateLock;
   const render = services.render || renderVideo;
   const publish = services.publish || publishToEnabledPlatforms;
+  const createCaption = services.generateCaption || generateCaption;
   const runDate = localDateKey(now, config.timezone);
   let releaseLock;
   let stage = 'adquirir lock';
@@ -36,6 +38,8 @@ async function dailyRun({config, logger, notifier, now = new Date(), services = 
 
     stage = 'renderizar vídeo';
     const rendered = await render({state, day, brand: elimination.brand, config, logger});
+    stage = 'gerar legenda';
+    const caption = await createCaption({brand: elimination.brand, niche: state.niche, config, logger});
     let publishStatus = 'manual_required';
     if (config.publishEnabled) {
       stage = 'publicar vídeo';
@@ -43,7 +47,7 @@ async function dailyRun({config, logger, notifier, now = new Date(), services = 
         seasonId: state.seasonId,
         day,
         brand: elimination.brand,
-        caption: `Dia ${day}/${state.totalDays}: ${elimination.brand} foi eliminada. #eliminandomarcas`,
+        caption,
       }, {logger, config});
       publishStatus = 'simulated_phase_1';
     } else {
@@ -56,6 +60,7 @@ async function dailyRun({config, logger, notifier, now = new Date(), services = 
       runDate,
       videoPath: path.relative(config.projectRoot, rendered.outputPath),
       publishStatus,
+      caption,
       processedAt,
     });
     await writeState(config.statePath, nextState);

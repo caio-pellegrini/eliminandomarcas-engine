@@ -54,6 +54,9 @@ function validateState(state) {
     if (typeof entry.videoPath !== 'string' || !entry.videoPath) {
       throw new Error(`Estado inválido: videoPath ausente no histórico do dia ${entry.day}.`);
     }
+    if (entry.caption !== undefined && (typeof entry.caption !== 'string' || !entry.caption.trim())) {
+      throw new Error(`Estado inválido: caption incorreta no histórico do dia ${entry.day}.`);
+    }
     if (typeof entry.processedAt !== 'string' || Number.isNaN(Date.parse(entry.processedAt))) {
       throw new Error(`Estado inválido: processedAt incorreto no histórico do dia ${entry.day}.`);
     }

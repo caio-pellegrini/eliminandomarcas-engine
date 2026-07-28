@@ -1,6 +1,6 @@
 # Eliminando Marcas Engine
 
-Motor headless que executa uma eliminação por dia, renderiza um vídeo vertical de 7 segundos com Remotion, adiciona trilha com FFmpeg, persiste o avanço da temporada em JSON e avisa pelo Discord. A publicação real no Instagram e TikTok está preparada como stub para a Fase 2.
+Motor headless que executa uma eliminação por dia, renderiza um vídeo vertical de 9 a 10 segundos com Remotion, adiciona trilha e efeito de roleta com FFmpeg, gera a legenda com IA, persiste o avanço da temporada em JSON e avisa pelo Discord. A publicação real no Instagram e TikTok está preparada como stub para a Fase 2.
 
 ## Como funciona
 
@@ -65,15 +65,18 @@ docker compose -f docker-compose.prod.yaml exec eliminandomarcas-engine node src
 - `TIMEZONE`: fuso usado pelo cron e pela idempotência;
 - `PUBLISH_ENABLED=false`: mantenha assim durante a Fase 1;
 - `DISCORD_WEBHOOK_URL`: webhook do canal que receberá sucesso e falha;
-- `VIDEO_DURATION_SECONDS`: use de 5 a 8; o padrão é 7;
+- `VIDEO_DURATION_SECONDS`: use 9 ou 10; o padrão é 10 (3 segundos finais são reservados ao resultado);
+- `WHEEL_SPIN_SOUND_PATH`: efeito de roleta, por padrão `assets/audio/wheel-spin.mp3`; se estiver ausente, o vídeo continua sem o efeito;
 - `REMOTION_CONCURRENCY`: reduza em VPS com pouca memória, por exemplo `25%`;
 - `DATA_DIR`, `OUTPUT_DIR` e `AUDIO_DIR`: os defaults `/app/...` são próprios para Docker.
+
+Para as legendas, configure `AI_PROVIDER` como `openai` ou `anthropic`, defina `AI_MODEL` e preencha somente a chave do provider ativo (`OPENAI_API_KEY` ou `ANTHROPIC_API_KEY`). `AI_WEB_SEARCH_ENABLED=false` mantém a busca hospedada desligada; ao mudar para `true`, o sistema habilita a ferramenta nativa do provider. `AI_TIMEOUT_MS` controla o timeout da geração. Qualquer falha usa uma legenda padrão e não interrompe o pipeline.
 
 Os placeholders de Instagram e TikTok estão comentados e não são usados na Fase 1.
 
 ## Trilhas sonoras
 
-Coloque duas ou três trilhas licenciadas em `assets/audio/`. Formatos aceitos: MP3, WAV, M4A, AAC, OGG e FLAC. A escolha é determinística (`dia % quantidade`), portanto uma repetição do mesmo dia usa a mesma música.
+Coloque duas ou três trilhas licenciadas em `assets/audio/`. Formatos aceitos: MP3, WAV, M4A, AAC, OGG e FLAC. A escolha é determinística (`dia % quantidade`), portanto uma repetição do mesmo dia usa a mesma música. O arquivo configurado em `WHEEL_SPIN_SOUND_PATH` é excluído dessa seleção e mixado separadamente apenas durante o giro.
 
 Se não houver arquivos, o FFmpeg gera uma de três ambientações sintéticas originais. Isso permite que o pipeline funcione do zero, mas vale substituir o fallback por faixas de melhor qualidade. Preserve o arquivo de licença/atribuição junto às trilhas.
 

@@ -1,11 +1,12 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
+import {getVideoTiming} from '../../videoTiming';
 import {base, palette} from '../styles';
 
-export const FinalCard = ({eliminatedBrand}) => {
+export const FinalCard = ({eliminatedBrand, durationSeconds}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const start = 5 * fps;
+  const {finalCardStartFrame: start} = getVideoTiming(durationSeconds, fps);
   const progress = spring({frame: frame - start, fps, config: {damping: 12, stiffness: 160}});
   const opacity = interpolate(frame, [start, start + 8], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return (
