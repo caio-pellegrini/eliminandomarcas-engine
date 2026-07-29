@@ -25,9 +25,10 @@ function createDiscordNotifier({webhookUrl, logger, fetchImpl = global.fetch}) {
   }
 
   return {
-    success({day, brand, videoPath, publishEnabled}) {
+    success({day, brand, videoPath, publishEnabled, publishResults = []}) {
+      const instagram = publishResults.find((result) => result.platform === 'instagram');
       const action = publishEnabled
-        ? 'Publicação simulada concluída (integrações reais entram na Fase 2).'
+        ? `Reel publicado no Instagram${instagram?.mediaId ? ` (mídia ${instagram.mediaId})` : ''}. TikTok continua como stub.`
         : 'Publicação manual necessária (`PUBLISH_ENABLED=false`).';
       return send(`✅ Vídeo do Dia ${day} pronto`, `**Eliminada:** ${brand}\n**Arquivo:** ${videoPath}\n${action}`, 0x2ECC71);
     },

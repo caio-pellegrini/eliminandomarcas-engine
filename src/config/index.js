@@ -58,6 +58,12 @@ function loadConfig(env = process.env) {
     anthropicApiKey: aiProvider === 'anthropic' ? (env.ANTHROPIC_API_KEY || '') : '',
     aiWebSearchEnabled: parseBoolean(env.AI_WEB_SEARCH_ENABLED, false),
     aiTimeoutMs: parseInteger(env.AI_TIMEOUT_MS, 15000, 'AI_TIMEOUT_MS'),
+    igAccessToken: env.IG_ACCESS_TOKEN || '',
+    igBusinessAccountId: env.IG_BUSINESS_ACCOUNT_ID || '',
+    publicVideoBaseUrl: env.PUBLIC_VIDEO_BASE_URL || '',
+    igApiVersion: env.IG_API_VERSION || 'v25.0',
+    igPollIntervalMs: parseInteger(env.IG_POLL_INTERVAL_MS, 5000, 'IG_POLL_INTERVAL_MS'),
+    igPollTimeoutMs: parseInteger(env.IG_POLL_TIMEOUT_MS, 300000, 'IG_POLL_TIMEOUT_MS'),
     logLevel: env.LOG_LEVEL || 'info',
   });
 }

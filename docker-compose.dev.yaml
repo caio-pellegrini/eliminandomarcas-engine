@@ -17,3 +17,13 @@ services:
       - ./data:/app/data
       - ./output:/app/output
       - ./assets/audio:/app/assets/audio
+
+  video-server:
+    image: nginx:1.28-alpine
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${VIDEO_DEV_PORT:-8080}:80"
+    volumes:
+      - ./output:/usr/share/nginx/videos:ro
+      - ./infra/nginx/dev.conf:/etc/nginx/nginx.conf:ro

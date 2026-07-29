@@ -16,6 +16,27 @@ services:
       - season-data:/app/data
       - rendered-videos:/app/output
 
+  video-server:
+    image: nginx:1.28-alpine
+    init: true
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - rendered-videos:/usr/share/nginx/videos:ro
+      - ./infra/nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - letsencrypt:/etc/letsencrypt:ro
+
+  certbot:
+    image: certbot/certbot:v4.0.0
+    profiles: [tls]
+    ports:
+      - "80:80"
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+
 volumes:
   season-data:
   rendered-videos:
+  letsencrypt:

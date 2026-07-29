@@ -41,15 +41,20 @@ async function dailyRun({config, logger, notifier, now = new Date(), services = 
     stage = 'gerar legenda';
     const caption = await createCaption({brand: elimination.brand, niche: state.niche, day, config, logger});
     let publishStatus = 'manual_required';
+    let publishResults = [];
     if (config.publishEnabled) {
       stage = 'publicar vídeo';
-      await publish(rendered.outputPath, {
+      publishResults = await publish(rendered.outputPath, {
         seasonId: state.seasonId,
         day,
         brand: elimination.brand,
         caption,
       }, {logger, config});
-      publishStatus = 'simulated_phase_1';
+      const instagramResult = publishResults.find((result) => result.platform === 'instagram');
+      if (!instagramResult?.success || instagramResult.simulated) {
+        throw new Error('A publicação real no Instagram não foi confirmada.');
+      }
+      publishStatus = 'instagram_published';
     } else {
       logger.info({day, videoPath: rendered.outputPath}, 'Publicação manual necessária');
     }
@@ -71,6 +76,7 @@ async function dailyRun({config, logger, notifier, now = new Date(), services = 
       brand: elimination.brand,
       videoPath: rendered.outputPath,
       publishEnabled: config.publishEnabled,
+      publishResults,
     });
     logger.info({day, brand: elimination.brand, videoPath: rendered.outputPath}, 'Execução diária concluída');
     return {status: 'completed', day, brand: elimination.brand, videoPath: rendered.outputPath};
