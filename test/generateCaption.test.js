@@ -5,6 +5,7 @@ const {
   selectVariation,
   slugifyHashtag,
 } = require('../src/ai/generateCaption');
+const seasonOneCuriosities = require('../src/ai/curiosidades/temporada-1-carros.json');
 
 const logger = {error: jest.fn()};
 const baseConfig = {
@@ -23,29 +24,37 @@ const makeSdk = (generateText) => ({
 
 beforeEach(() => logger.error.mockClear());
 
-test('monta a legenda completa com quatro separadores, CTA e hashtags', async () => {
+test('usa a curiosidade estática da temporada sem chamar a IA', async () => {
+  const generateTextMock = jest.fn();
   const caption = await generateCaption({
     brand: 'Rolls-Royce',
-    niche: 'Carros Clássicos',
+    niche: 'Carros',
+    seasonNumber: 1,
     day: 1,
     config: baseConfig,
     logger,
-    sdk: makeSdk(jest.fn().mockResolvedValue({text: '**Curiosidade:** Foi fundada em 1900. Nasceu no Brasil.'})),
+    sdk: makeSdk(generateTextMock),
   });
-  expect(caption).toBe([
-    'Mais uma marca cai hoje... será a sua? 😰',
-    '.',
-    '.',
-    '.',
-    '.',
-    'Curiosidade: Foi fundada em 1900. Nasceu no Brasil.',
-    '',
-    'Essa marca faz parte da sua história? Comenta aí 👇',
-    '',
-    '@eliminandomarcas',
-    '#eliminandomarcas #carrosclassicos #rollsroyce',
-  ].join('\n'));
+  expect(caption).toContain(`Curiosidade: ${seasonOneCuriosities['Rolls-Royce']}`);
+  expect(caption).toContain('#eliminandomarcas #carros #rollsroyce');
+  expect(generateTextMock).not.toHaveBeenCalled();
   expect(logger.error).not.toHaveBeenCalled();
+});
+
+test('cai para a IA quando a marca não existe no JSON da temporada', async () => {
+  const generateTextMock = jest.fn().mockResolvedValue({text: '**Curiosidade:** Fato gerado no fallback.'});
+  const caption = await generateCaption({
+    brand: 'Marca futura',
+    niche: 'Carros',
+    seasonNumber: 1,
+    day: 2,
+    config: baseConfig,
+    logger,
+    sdk: makeSdk(generateTextMock),
+  });
+
+  expect(caption).toContain('Curiosidade: Fato gerado no fallback.');
+  expect(generateTextMock).toHaveBeenCalledTimes(1);
 });
 
 test('varia gancho e CTA de forma determinística com offsets diferentes', () => {

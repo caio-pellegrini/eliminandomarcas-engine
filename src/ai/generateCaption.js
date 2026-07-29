@@ -1,5 +1,9 @@
+const fs = require('node:fs/promises');
+const path = require('node:path');
+
 const HANDLE = '@eliminandomarcas';
 const SEPARATOR_LINES = Array(4).fill('.').join('\n');
+const CURIOSITIES_DIRECTORY = path.join(__dirname, 'curiosidades');
 
 const hookVariations = [
   'Sua marca favorita ainda está no jogo? 👀',
@@ -83,8 +87,42 @@ function cleanCuriosity(text) {
     .replace(/\s+/g, ' ');
 }
 
-async function generateCaption({brand, niche, day, config, logger, sdk}) {
+function curiosityFilename({seasonNumber, niche}) {
+  const nicheSlug = slugifyHashtag(niche);
+  if (!Number.isInteger(seasonNumber) || !nicheSlug) return null;
+  return `temporada-${seasonNumber}-${nicheSlug}.json`;
+}
+
+async function loadStaticCuriosity({brand, niche, seasonNumber, curiosities, curiosityDirectory = CURIOSITIES_DIRECTORY}) {
+  let values = curiosities;
+  if (!values) {
+    const filename = curiosityFilename({seasonNumber, niche});
+    if (!filename) return null;
+    try {
+      values = JSON.parse(await fs.readFile(path.join(curiosityDirectory, filename), 'utf8'));
+    } catch (error) {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    }
+  }
+  const curiosity = values[brand];
+  return typeof curiosity === 'string' && curiosity.trim() ? curiosity.trim() : null;
+}
+
+async function generateCaption({brand, niche, day, seasonNumber, config, logger, sdk, curiosities, curiosityDirectory}) {
   const captionData = {brand, niche, currentDay: day};
+  try {
+    const staticCuriosity = await loadStaticCuriosity({
+      brand,
+      niche,
+      seasonNumber,
+      curiosities,
+      curiosityDirectory,
+    });
+    if (staticCuriosity) return captionWithCuriosity(staticCuriosity, captionData);
+  } catch (error) {
+    logger.error({err: error, brand, seasonNumber}, 'Falha ao ler curiosidade estática; tentando gerar com IA');
+  }
   try {
     if (config.aiProvider === 'openai' && !config.openaiApiKey) throw new Error('OPENAI_API_KEY não configurada.');
     if (config.aiProvider === 'anthropic' && !config.anthropicApiKey) throw new Error('ANTHROPIC_API_KEY não configurada.');
@@ -116,11 +154,13 @@ module.exports = {
   buildCaption,
   captionWithCuriosity,
   cleanCuriosity,
+  curiosityFilename,
   ctaVariations,
   fallbackCaption,
   generateCaption,
   hookVariations,
   loadAiSdk,
+  loadStaticCuriosity,
   selectVariation,
   slugifyHashtag,
 };

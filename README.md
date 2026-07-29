@@ -1,6 +1,6 @@
 # Eliminando Marcas Engine
 
-Motor headless que executa uma eliminação por dia, renderiza um vídeo vertical de 9 a 10 segundos com Remotion, adiciona trilha e efeito de roleta com FFmpeg, gera a legenda com IA, publica Reels no Instagram, persiste o avanço da temporada em JSON e avisa pelo Discord. A publicação no TikTok continua como stub.
+Motor headless que executa uma eliminação por dia, renderiza um vídeo vertical de 9 a 10 segundos com Remotion, adiciona trilha e efeito de roleta com FFmpeg, monta a legenda com curiosidades estáticas (e IA como fallback), publica Reels no Instagram, persiste o avanço da temporada em JSON e avisa pelo Discord. A publicação no TikTok continua como stub.
 
 ## Como funciona
 
@@ -82,7 +82,7 @@ docker compose -f docker-compose.prod.yaml exec eliminandomarcas-engine node src
 - `IG_API_VERSION`: versão da Graph API (default `v25.0`);
 - `IG_POLL_INTERVAL_MS` e `IG_POLL_TIMEOUT_MS`: intervalo e timeout total do processamento do container (defaults de 5 segundos e 5 minutos).
 
-Para as legendas, configure `AI_PROVIDER` como `openai` ou `anthropic`, defina `AI_MODEL` e preencha somente a chave do provider ativo (`OPENAI_API_KEY` ou `ANTHROPIC_API_KEY`). `AI_WEB_SEARCH_ENABLED=false` mantém a busca hospedada desligada; ao mudar para `true`, o sistema habilita a ferramenta nativa do provider. `AI_TIMEOUT_MS` controla o timeout da geração. Qualquer falha usa uma legenda padrão e não interrompe o pipeline.
+As legendas usam primeiro a curiosidade estática cadastrada para a temporada. A IA só é chamada quando o arquivo não existe ou a marca eliminada não tem uma entrada. Para esse fallback, configure `AI_PROVIDER` como `openai` ou `anthropic`, defina `AI_MODEL` e preencha somente a chave do provider ativo (`OPENAI_API_KEY` ou `ANTHROPIC_API_KEY`). `AI_WEB_SEARCH_ENABLED=false` mantém a busca hospedada desligada; ao mudar para `true`, o sistema habilita a ferramenta nativa do provider. `AI_TIMEOUT_MS` controla o timeout da geração. Qualquer falha também no fallback usa uma legenda padrão e não interrompe o pipeline.
 
 O token precisa ter as permissões `instagram_business_basic` e `instagram_business_content_publish`. Esta integração usa `graph.instagram.com`, sem exigir Página do Facebook vinculada. Renovação automática do token permanece fora do escopo; atualize `IG_ACCESS_TOKEN` manualmente quando necessário.
 
@@ -109,6 +109,8 @@ Os testes cobrem avanço, idempotência por data, limite final, data no fuso con
 4. Defina `eliminationOrder` com exatamente `totalDays` nomes, sem a futura vencedora.
 5. Inicie com `currentDay: 1`, `history: []` e `lastRunAt: null`.
 6. Ajuste `ACTIVE_SEASON` no `.env` e reinicie o container.
+
+Cadastre as curiosidades em `src/ai/curiosidades/temporada-{número}-{nicho}.json`, usando o nicho sem espaços, acentos ou pontuação (por exemplo, `temporada-1-carros.json`). O arquivo deve ser um objeto JSON no formato `{"Nome da marca": "Texto da curiosidade"}`. Para atualizar ou completar as curiosidades de uma temporada, basta editar o JSON correspondente; uma marca ausente usa automaticamente a IA como fallback.
 
 Nunca altere a ordem de dias já presentes no histórico. Antes de uma correção manual, pare o container e faça uma cópia do JSON; isso evita disputar o arquivo com o job.
 

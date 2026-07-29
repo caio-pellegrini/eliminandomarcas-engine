@@ -1,5 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, Easing, interpolate, interpolateColors, useCurrentFrame, useVideoConfig} from 'remotion';
+import {createRouletteLayout, getSpinStartRotation, positiveModulo} from '../../rouletteLayout';
 import {getVideoTiming} from '../../videoTiming';
 import {base, palette} from '../styles';
 
@@ -9,27 +10,22 @@ const LABEL_INNER_RADIUS = 185;
 const LABEL_OUTER_RADIUS = 405;
 const HUB_RADIUS = 108;
 const DIVIDER_OUTER_RADIUS = 443;
-const START_ROTATION = -2610;
 const SPIN_EASING = Easing.bezier(0.08, 0.62, 0.12, 1);
 
-const positiveModulo = (value, divisor) => ((value % divisor) + divisor) % divisor;
-
-const getWheelRotation = (frame, stopFrame) => interpolate(frame, [0, stopFrame], [START_ROTATION, 0], {
+const getWheelRotation = (frame, stopFrame, finalRotation) => interpolate(frame, [0, stopFrame], [getSpinStartRotation(finalRotation), finalRotation], {
   easing: SPIN_EASING,
   extrapolateLeft: 'clamp',
   extrapolateRight: 'clamp',
 });
 
-export const Roulette = ({brands, eliminatedBrand, durationSeconds}) => {
+export const Roulette = ({brands, eliminatedBrand, durationSeconds, day}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const {rouletteEndFrame, rouletteStopFrame} = getVideoTiming(durationSeconds, fps);
   const opacity = interpolate(frame, [rouletteEndFrame - 8, rouletteEndFrame], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const rotation = getWheelRotation(frame, rouletteStopFrame);
-  const previousRotation = getWheelRotation(Math.max(0, frame - 1), rouletteStopFrame);
-  const alternatives = brands.filter((brand) => brand !== eliminatedBrand);
-  const labels = [eliminatedBrand, ...alternatives];
-  const segmentAngle = 360 / labels.length;
+  const {labels, eliminatedIndex, segmentAngle, finalRotation} = createRouletteLayout(brands, eliminatedBrand, day);
+  const rotation = getWheelRotation(frame, rouletteStopFrame, finalRotation);
+  const previousRotation = getWheelRotation(Math.max(0, frame - 1), rouletteStopFrame, finalRotation);
   const labelRadius = (LABEL_INNER_RADIUS + LABEL_OUTER_RADIUS) / 2;
   const labelWidth = LABEL_OUTER_RADIUS - LABEL_INNER_RADIUS;
   const fontSize = labels.length > 48 ? 15 : labels.length > 36 ? 18 : labels.length > 24 ? 21 : labels.length > 16 ? 25 : 30;
@@ -121,7 +117,7 @@ export const Roulette = ({brands, eliminatedBrand, durationSeconds}) => {
           const normalizedAngle = positiveModulo(angle, 360);
           const isLeftSide = normalizedAngle > 90 && normalizedAngle < 270;
           const readableAngle = isLeftSide ? angle + 180 : angle;
-          const isEliminated = index === 0;
+          const isEliminated = index === eliminatedIndex;
           return (
             <div
               key={brand}

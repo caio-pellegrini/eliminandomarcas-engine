@@ -39,7 +39,14 @@ async function dailyRun({config, logger, notifier, now = new Date(), services = 
     stage = 'renderizar vídeo';
     const rendered = await render({state, day, brand: elimination.brand, config, logger});
     stage = 'gerar legenda';
-    const caption = await createCaption({brand: elimination.brand, niche: state.niche, day, config, logger});
+    const caption = await createCaption({
+      brand: elimination.brand,
+      niche: state.niche,
+      seasonNumber: state.seasonNumber,
+      day,
+      config,
+      logger,
+    });
     let publishStatus = 'manual_required';
     let publishResults = [];
     if (config.publishEnabled) {

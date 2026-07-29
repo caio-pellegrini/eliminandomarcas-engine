@@ -20,6 +20,7 @@ export const Opening = ({day, totalDays, niche, durationSeconds}) => {
           fontWeight: 900,
           letterSpacing: 1.2,
           textWrap: 'balance',
+          transform: 'translateY(20px)',
         }}
       >
         DIA {day}/{totalDays} ELIMINANDO MARCAS DE {niche.toUpperCase()} ATÉ SOBRAR UMA VENCEDORA
