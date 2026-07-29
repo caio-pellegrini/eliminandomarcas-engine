@@ -44,15 +44,7 @@ npm run studio
 
 ## Produção no VPS
 
-Antes do primeiro `up`, aponte o DNS do subdomínio de vídeos para o VPS e emita o certificado. As portas 80 e 443 precisam estar livres e acessíveis. Substitua o domínio e o e-mail abaixo:
-
-```bash
-docker compose -f docker-compose.prod.yaml --profile tls run --rm --service-ports certbot \
-  certonly --standalone --cert-name videos \
-  -d videos.seudominio.com.br -m voce@seudominio.com.br --agree-tos --no-eff-email
-```
-
-O nome interno do certificado deve continuar sendo `videos`, pois é o caminho usado pelo Nginx. Depois disso:
+No Dokploy, crie o domínio público para o serviço `video-server`, apontando o Traefik para a porta interna `80`, e habilite HTTPS/Let's Encrypt no próprio Dokploy. O Compose não publica portas do Nginx no host; somente o Traefik tem acesso externo ao serviço pela rede Docker.
 
 ```bash
 cp .env.example .env
@@ -63,15 +55,7 @@ docker compose -f docker-compose.prod.yaml up -d
 docker compose -f docker-compose.prod.yaml logs -f eliminandomarcas-engine
 ```
 
-O Compose de produção usa `restart: always`, não monta o código e mantém o estado de `data/`, os vídeos de `output/` e os certificados em volumes nomeados do Docker. O Nginx lê o mesmo volume `rendered-videos` em modo somente leitura, redireciona HTTP para HTTPS e aceita publicamente apenas caminhos no formato `/temporada-N/dia-XX.mp4`; listagem de diretórios e qualquer outro arquivo retornam 404. As trilhas são incluídas na imagem durante o build. Faça backup periódico dos volumes `season-data` e `rendered-videos`; no Dokploy, eles podem ser configurados na aba **Volume Backups**.
-
-Para renovar o certificado emitido pelo modo standalone, pare brevemente apenas o Nginx, renove e inicie-o novamente:
-
-```bash
-docker compose -f docker-compose.prod.yaml stop video-server
-docker compose -f docker-compose.prod.yaml --profile tls run --rm --service-ports certbot renew
-docker compose -f docker-compose.prod.yaml up -d video-server
-```
+O Compose de produção usa `restart: always`, não monta o código e mantém o estado de `data/` e os vídeos de `output/` em volumes nomeados do Docker. O Nginx lê o mesmo volume `rendered-videos` em modo somente leitura e aceita apenas caminhos no formato `/temporada-N/dia-XX.mp4`; listagem de diretórios e qualquer outro arquivo retornam 404. O HTTPS, o certificado e o redirecionamento HTTP→HTTPS são responsabilidade do Traefik/Dokploy. As trilhas são incluídas na imagem durante o build. Faça backup periódico dos volumes `season-data` e `rendered-videos`; no Dokploy, eles podem ser configurados na aba **Volume Backups**.
 
 Na primeira criação, o Docker inicializa `season-data` com a temporada incluída na imagem. Não remova os volumes ao fazer redeploy, pois eles guardam o avanço da temporada e os vídeos renderizados.
 
