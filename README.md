@@ -1,6 +1,21 @@
 # Eliminando Marcas Engine
 
-Motor headless que executa uma eliminação por dia, renderiza um vídeo vertical de 9 a 10 segundos com Remotion, adiciona trilha e efeito de roleta com FFmpeg, monta a legenda com curiosidades estáticas (e IA como fallback), publica Reels no Instagram, persiste o avanço da temporada em JSON e avisa pelo Discord. A publicação no TikTok continua como stub.
+**A headless content-production pipeline that turns a daily elimination state into a rendered short-form video and can publish it automatically to Instagram.**
+
+I built the engine to automate an entire recurring media workflow rather than a single generation step. On each scheduled run it safely advances the season, renders a vertical video with Remotion, mixes audio with FFmpeg, builds the caption, publishes when enabled, persists state, and reports the result through Discord.
+
+### Engineering highlights
+
+- Idempotent daily execution with an exclusive lock and atomic JSON state updates.
+- 1080×1920 video rendering with **Remotion** and audio composition with **FFmpeg**.
+- Instagram publishing behind a feature flag, with a manual workflow available when publishing is disabled.
+- Static caption facts first, with configurable AI generation only as a fallback.
+- Dockerized development and production flows, including persistent volumes and a read-only video-serving path.
+- Explicit failure handling and Discord notifications around the scheduled pipeline.
+
+The interesting part of this project is orchestration: rendering, media processing, external APIs, persistent state, scheduling, and deployment all have to behave as one repeatable workflow.
+
+> Detailed deployment and operational documentation below is in Portuguese.
 
 ## Como funciona
 
